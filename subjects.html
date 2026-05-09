@@ -321,8 +321,7 @@
     <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="بروفايل">
   </a>
 
-
-  <script>
+<script>
 /* ================== IMAGES ================== */
 const subjectImages = {
   "أحياء": "https://www2.0zz0.com/2025/11/03/16/425588580.jpg",
@@ -344,38 +343,33 @@ if (!selectedYear) {
   loadSubjects(selectedYear.id);
 }
 
-// ===== تحميل المواد =====
+// ===== تحميل المواد (بدون توكن) =====
 async function loadSubjects(yearId) {
   try {
-    const res = await fetch(`/api/proxy?type=subjects&yearId=${yearId}`, {
-      credentials: "include" 
-    });
-
-    // ===== تحقق الجلسة =====
-    if (res.status === 401) {
-      logoutAndRedirect();
-      return;
-    }
+    const res = await fetch(`/api/proxy?type=subjects&yearId=${yearId}`);
 
     if (!res.ok) throw new Error("Network error");
 
     const subjects = await res.json();
 
-    // ===== عرض المواد =====
     subjectsList.innerHTML = "";
 
-    if (!subjects.length) {
+    if (!subjects || !subjects.length) {
       subjectsList.innerHTML = `<li class="loading">❌ لا توجد مواد لهذه السنة</li>`;
       return;
     }
 
     subjects.forEach(subject => {
       const li = document.createElement("li");
+
       const circle = document.createElement("div");
       circle.className = "circle";
 
       const img = document.createElement("img");
-      img.src = subjectImages?.[subject.name] || "https://img.icons8.com/ios-filled/100/ffd700/book.png";
+      img.src =
+        subjectImages?.[subject.name] ||
+        "https://img.icons8.com/ios-filled/100/ffd700/book.png";
+
       circle.appendChild(img);
 
       const span = document.createElement("span");
@@ -402,13 +396,7 @@ async function loadSubjects(yearId) {
     subjectsList.innerHTML = `<li class="loading">❌ خطأ في تحميل البيانات</li>`;
   }
 }
+</script>
 
-// ===== دالة الخروج والرجوع لتسجيل الدخول =====
-function logoutAndRedirect() {
-  localStorage.clear();
-  sessionStorage.clear();
-  window.location.href = "index.html";
-}
-  </script>
 </body>
 </html>
