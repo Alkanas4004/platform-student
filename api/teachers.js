@@ -1,5 +1,4 @@
-import fs from "fs/promises";
-import path from "path";
+import { db } from "@/lib/firebaseAdmin";
 
 export default async function handler(req, res) {
   const { yearId, subjectId } = req.query;
@@ -9,24 +8,45 @@ export default async function handler(req, res) {
   }
 
   try {
-    const dataPath = path.join(process.cwd(), "data", "organized_output.json");
-    const fileData = await fs.readFile(dataPath, "utf-8");
-    const siteData = JSON.parse(fileData);
+    // تأكد إن السنة موجودة
+    const yearRef = db.collection("years").doc(String(yearId));
+    const yearSnap = await yearRef.get();
+    if (!yearSnap.exists) {
+      return res.status(404).json({ error: "السنة غير موجودة" });
+    }
 
-    const year = siteData.find(y => String(y.id) === String(yearId) || y.name === yearId);
-    if (!year) return res.status(404).json({ error: "السنة غير موجودة" });
+    // تأكد إن المادة موجودة
+    const subjectRef = yearRef.collection("subjects").doc(String(subjectId));
+    const subjectSnap = await subjectRef.get();
+    if (!subjectSnap.exists) {
+      return res.status(404).json({ error: "المادة غير موجودة" });
+    }
 
-    const subject = year.subjects.find(s => String(s.id) === String(subjectId) || s.name === subjectId);
-    if (!subject) return res.status(404).json({ error: "المادة غير موجودة" });
+    // جلب المدرسين
+    const teachersSnap = await subjectRef
+      .collection("teachers")
+      .get();
 
-    const teachers = subject.teachers.map(t => ({
-      id: t.id,
-      name: t.name,
-      image_url: t.image_url || null,
-      chapters_count: t.chapters?.length || 0
-    }));
+    const teachers = await Promise.all(
+      teachersSnap.docs.map(async doc => {
+        const data = doc.data();
+
+        // عدد الفصول
+        const chaptersSnap = await doc.ref
+          .collection("chapters")
+          .get();
+
+        return {
+          id: doc.id,
+          name: data.name,
+          image_url: data.image_url || null,
+          chapters_count: chaptersSnap.size
+        };
+      })
+    );
 
     return res.status(200).json(teachers);
+
   } catch (err) {
     console.error("Error in /api/teachers:", err);
     return res.status(500).json({ error: "حدث خطأ في الخادم" });
