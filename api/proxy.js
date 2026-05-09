@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   }
 
   const { type, yearId, subjectId, teacherId, chapterId, lectureId } = req.query;
-  const BASE = "https://platform-sigma-seven.vercel.app";
+  const BASE = "https://platform-student.vercel.app";
 
   let url = "";
 
