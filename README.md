@@ -1,1 +1,1 @@
-# platform-student
+# platform
