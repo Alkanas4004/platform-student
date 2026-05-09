@@ -144,37 +144,14 @@ h1 {
   <div class="card skeleton">
     <div class="icon"></div>
     <div class="year-name">----</div>
-    <div class="year-meta">----</div>
-  </div>
-  <div class="card skeleton">
-    <div class="icon"></div>
-    <div class="year-name">----</div>
-    <div class="year-meta">----</div>
-  </div>
-</div>
-
-  
 <script>
 const grid = document.getElementById("grid");
 
-// ===== دالة الطرد الموحدة =====
-function logoutAndRedirect() {
-  localStorage.clear();
-  sessionStorage.clear();
-  window.location.href = 'index.html';
-}
-
-// ===== fetch آمنة تتحقق من انتهاء الجلسة =====
-async function safeFetch(url, options = {}) {
+// ===== fetch عادي بدون توكن =====
+async function simpleFetch(url, options = {}) {
   try {
-    const res = await fetch(url, { credentials: "include", ...options });
-
-    if (res.status === 401) {
-      logoutAndRedirect();
-      return null;
-    }
-
-    if (!res.ok) throw new Error("❌ حدث خطأ أثناء جلب البيانات");
+    const res = await fetch(url, options);
+    if (!res.ok) throw new Error("Fetch error");
     return await res.json();
   } catch (err) {
     console.error(err);
@@ -184,45 +161,49 @@ async function safeFetch(url, options = {}) {
 
 // ===== تحميل السنوات =====
 async function loadYears() {
-  try {
-    grid.innerHTML = `<p style="text-align:center;color:#ffd700">⏳ جاري تحميل البيانات...</p>`;
-    const data = await safeFetch("/api/proxy?type=years");
+  grid.innerHTML = `<p style="text-align:center;color:#ffd700">⏳ جاري تحميل البيانات...</p>`;
 
-    if (!data || !Array.isArray(data)) {
-      console.error("Unexpected response:", data);
-      grid.innerHTML = `<p style="text-align:center;color:#f55">❌ فشل تحميل البيانات</p>`;
-      return;
-    }
+  const data = await simpleFetch("/api/proxy?type=years");
 
-    grid.innerHTML = ""; // تفريغ محتوى التحميل
-
-    data.forEach(year => {
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `
-        <div class="icon">
-          <img src="${year.image_url || 'https://img.icons8.com/ios-filled/100/ffd700/calendar.png'}">
-        </div>
-        <div class="year-name">${year.name}</div>
-        <div class="year-meta">${year.subjects_count} مادة</div>
-      `;
-
-      card.onclick = () => {
-        localStorage.setItem("selected_year", JSON.stringify(year));
-        location.href = "subjects.html";
-      };
-
-      grid.appendChild(card);
-    });
-
-  } catch(err) {
+  if (!data || !Array.isArray(data)) {
     grid.innerHTML = `<p style="text-align:center;color:#f55">❌ فشل تحميل البيانات</p>`;
-    console.error(err);
+    return;
   }
+
+  grid.innerHTML = "";
+
+  data.forEach(year => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="icon">
+        <img src="${year.image_url || 'https://img.icons8.com/ios-filled/100/ffd700/calendar.png'}">
+      </div>
+      <div class="year-name">${year.name}</div>
+      <div class="year-meta">${year.subjects_count} مادة</div>
+    `;
+
+    card.onclick = () => {
+      localStorage.setItem("selected_year", JSON.stringify(year));
+      location.href = "subjects.html";
+    };
+
+    grid.appendChild(card);
+  });
 }
 
 loadYears();
-</script>
+</script>    <div class="year-meta">----</div>
+  </div>
+  <div class="card skeleton">
+    <div class="icon"></div>
+    <div class="year-name">----</div>
+    <div class="year-meta">----</div>
+  </div>
+</div>
+
+  
+
 
 </body>
 </html>
